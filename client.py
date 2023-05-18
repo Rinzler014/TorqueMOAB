@@ -16,6 +16,8 @@ while True:
     mensaje = input("Enter the operation ('exit' para terminar): ")
 
     if mensaje == 'exit':
+        # Enviar el mensaje al servidor
+        sock.sendall(mensaje.encode())
         break
 
     # Enviar el mensaje al servidor

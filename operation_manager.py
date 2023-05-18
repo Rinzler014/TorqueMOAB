@@ -28,3 +28,6 @@ while True:
 
     # Mostrar el mensaje en pantalla
     print("Mensaje recibido:", mensaje)
+
+
+conn.close()
