@@ -1,5 +1,6 @@
 import socket
 import json
+from datetime import datetime, timedelta
 
 # Datos del servidor
 host = 'localhost'
@@ -9,7 +10,8 @@ port = 65432
 
 queue = {}
 
-counter = 0
+# Obtener marca de tiempo antes de ejecutar la línea de código
+marca_tiempo_inicial = datetime.now()
 
 # Crear un socket TCP/IP
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,11 +34,15 @@ while True:
     operation = conn.recv(1024).decode()
     operation = json.loads(operation)
     
+    diferencia_tiempo = datetime.now() - marca_tiempo_inicial
+
+    duracion_minuto = timedelta(minutes=1)
+    
     queue[operation["execution_time"]] = operation
     
     print("Mensaje Agregado a la Lista de Espera:", operation)
 
-    if operation["command"] == 'exit':
+    if operation["zipcode"] == 'exit':
         
         operation = json.dumps(operation)
         
@@ -58,7 +64,7 @@ while True:
         
         break
     
-    if len(queue) == 3:
+    if diferencia_tiempo >= duracion_minuto:
         
         while len(queue) > 0:
         
@@ -81,6 +87,9 @@ while True:
 
             # Cerrar la conexión con el archivo de impresión
             archivo_sock.close()
+
+        print("Minute Completed...")
+        marca_tiempo_inicial = datetime.now()
 
 # Cerrar la conexión con el cliente
 conn.close()

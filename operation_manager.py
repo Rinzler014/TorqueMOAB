@@ -4,71 +4,34 @@ import numpy as np
 import datetime
 import time
 import json
+import zipfile
+import matplotlib.pyplot
 
 data = pd.read_csv('data.csv')
 
-def state_with_the_most_accidents():
-    
-    states = data["State"].values
-    states = pd.DataFrame(states, columns=["State"])
-    return states["State"].value_counts()
+block = pd.DataFrame(data,columns=['Zipcode','Start_Lat', 'Start_Lng','Bump', 'Crossing', 'Give_Way', 'Junction', 'No_Exit', 'Railway',
+       'Roundabout', 'Station', 'Stop', 'Traffic_Calming', 'Traffic_Signal',
+       'Turning_Loop'])
 
-def hours_with_most_accidents():
-    
-    dates = data["Start_Time"].values
+block["Zipcode"].value_counts()
 
-    hours = []
+def zipDF(zipcode,df):
+  DataF=df.loc[block['Zipcode'] == zipcode]
+  return(DataF)
 
-    for date in dates:
-        date = date.split(" ")
-        date = date[1].split(":")
-        date = date[0]
-        
-        hours.append(date + ":00")
-    
-    hours = pd.DataFrame(hours, columns=["Start_Time"])
-    hours = hours["Start_Time"].value_counts().head(5)
-    times = []
-    
-    for hour in hours.index:
-        hour = hour.split(":")
-        hour = hour[0]
-        times.append("Day" if int(hour) < 17 else "Night")
-        
-    return pd.DataFrame({
-        "Hour": hours.index,
-        "Accidents": hours.values,
-        "Time": times
-    })
-    
-def day_with_most_accidents():
-    
-    dates = data["Start_Time"].values    
-    days = []
+def start_co(df):
+  lat=df['Start_Lat'].head(1)
+  lng=df['Start_Lng'].head(1)
+  return(lat.values,lng.values)
 
-    for date in dates:
-        date = date.split(" ")
-        date = date[0]
-        
-        day = datetime.datetime.strptime(date, "%Y-%m-%d").weekday()
-        
-        days.append(day)
-            
-    days = pd.DataFrame(days, columns=["Start_Time"])
-    return days["Start_Time"].value_counts().head(1)
-
-def time_with_most_cases():
-
-    day = 0
-    night = 0
-    
-    for index, time in enumerate(hours_with_most_accidents()["Time"]):
-        if time == "Day": day += int(hours_with_most_accidents()["Accidents"][index])
-        else: night += int(hours_with_most_accidents()["Accidents"][index])
-
-    return day, night
-
-
+def max_acci(df):
+  df2=pd.DataFrame(df,columns=['Bump', 'Crossing', 'Give_Way', 'Junction', 'No_Exit', 'Railway',
+       'Roundabout', 'Station', 'Stop', 'Traffic_Calming', 'Traffic_Signal',
+       'Turning_Loop'])
+  S=df2.sum()
+  s_value=S.max()
+  s_maxx = S.astype("int").idxmax()
+  print(s_maxx, "", s_value)
 
 # Datos del servidor
 host = 'localhost'
@@ -95,27 +58,19 @@ while True:
     operation = json.loads(operation)
     
     # Mostrar el mensaje en pantalla
+    
     print("Mensaje recibido:", operation)
     
-    match operation["command"]:
-        
-        case "state_with_the_most_accidents":
-            print(state_with_the_most_accidents())
-        
-        case "hours_with_most_accidents":
-            print(hours_with_most_accidents())
-            
-        case "day_with_most_accidents":
-            print(day_with_most_accidents())
-        
-        case "time_with_most_cases":
-            print(time_with_most_cases())
-            
-        case "exit":
-            break
-            
-        case _:
-            print("Command not found")
+    if operation["zipcode"] == 'exit':
+        break
+    
+    df=zipDF(operation["zipcode"],block)
+    la,ln=start_co(df)
+    print(" la latitud es: ", la.item(0))
+    print(" la longitud es: ",ln.item(0))
+
+    print("-"*30,"\n")
+    max_acci(df)
     
 
 conn.close()
